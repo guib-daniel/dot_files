@@ -1,4 +1,9 @@
 syntax on
+set nocompatible
+set t_Co=256 " for some reason, Colors don't work if this option is not on 
+
+
+
 
  " Sets and Lets -------------------------------------------------{{{
 
@@ -31,14 +36,18 @@ set wildmode=list:longest
 set wildignore=*docx,*.jpg,*.png,*.gif,*.pdf,*.pyc,*.exe,*.flv,*.img,*.xlsx
 
 " Set logic to show tabs and white spaces
-exec "set listchars=tab:\uBB\uBB,nbsp:~,trail:\uB7"
-set list
+" exec "set listchars=tab:\uBB\uBB,nbsp:~,trail:\uB7"
+" set list
 
+" Set the localleader to -
+let maplocalleader = "-"
 
 " Remaping : to ; and ; to :
 nnoremap ; :
 nnoremap : ;
 
+" Disabling the stupid autocomment 
+set formatoptions-=cro
 
 
 "}}}
@@ -88,6 +97,14 @@ nnoremap <space> za
 nnoremap <leader>/ :nohlsearch<CR>
 
 
+" Open the VIMRC file pressing ,ev
+nnoremap <leader>ev :vsplit $MYVIMRC<cr>
+
+" Source the VIMRC file, so I don't need to open and close again
+nnoremap <leader>sv :source $MYVIMRC<cr>
+
+
+
 
 " Adding new logic to change the split view with ctrl + shift + j or k
 "noremap <silent> <C-S-H> :vertical resize -5<CR>
@@ -96,6 +113,11 @@ noremap <silent> <C-Left> :vertical resize +1<CR>
 noremap <silent> <C-Right> :vertical resize -1<CR>
 noremap <silent> <C-Up> :horizontal resize +1<CR>
 noremap <silent> <C-Down> :horizontal resize -1<CR>
+
+
+
+" Command to toggle UndoTree!
+noremap <leader>ut :UndotreeToggle<CR>
 
 
 "}}}
@@ -158,48 +180,41 @@ augroup END
 
 "}}}
 
-" Status Line -------------------------------------------{{{
 
-" Clear status line when vimrc is reloaded.
-set statusline=
-
-" Status line left side.
-set statusline+=\ %F\ %M\ %Y\ %R
-
-" Use a divider to separate the left side from the right side.
-set statusline+=%=
+" Abreviations-----------------------------------{{{
 
 
 
-" Status line right side.
-set statusline+=\ ascii:\ %b\ hex:\ 0x%B\ row:\ %l\ col:\ %c\ percent:\
 
 
 
-" Show the status on the second to last line.
-set laststatus=2
 
 
-" }}}
+iabbrev @@ gui.bdaniel@gmail.com 
+iabbrev ggui Guilherme Berwaldt Daniel
 
 
 
+"}}}
 
 " Plugins -----------------------------------------------{{{
 
 
 call plug#begin('~/.vim/plugged')
 
-	Plug 'dense-analysis/ale'
 	Plug 'preservim/nerdtree'
 	Plug 'tpope/vim-surround'
 	Plug 'tpope/vim-commentary'
 	Plug 'tpope/vim-sensible'
-	Plug 'machakann/vim-highlightedyank'
 	Plug 'kshenoy/vim-signature'
 	Plug 'Rigellute/shades-of-purple.vim'
 	Plug 'dracula/vim',{'as':'dracula'}
-"	Plug 'tomasr/malokai' 
+	Plug 'vimwiki/vimwiki'
+	Plug 'dense-analysis/ale'
+	Plug 'itchyny/lightline.vim'
+	Plug 'machakann/vim-highlightedyank'
+	Plug 'mbbill/undotree' 
+
 
 call plug#end()
 
@@ -209,32 +224,6 @@ call plug#end()
 
 
 
-" Colors -------------------------------------------------{{{
-
-
-":colorscheme molokai
-":colorscheme shades_of_purple
-":colorscheme dracula
-
-
-
-
-"}}}
-
-
-" NerdTree logic and commands ---------------------------{{{
-"autocmd VimEnter * NERDTree
-autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
-
-" Setting another directory as the starting point
-cd D:\
-
-"nnoremap <C-n> :NERDTreeMirror<CR>:NERDTreeFocus<CR>
-nnoremap <C-n> :NERDTreeToggle<CR>
-nnoremap <C-f> :NERDTreeFind<CR>
-
-"}}}
-
 
 
 
@@ -242,4 +231,87 @@ nnoremap <C-f> :NERDTreeFind<CR>
 
 nnoremap <F12> :w<CR>:!python %<CR>
 
+
+
+"" Open explorer where current file is located
+"" Only for win for now.
+func! File_manager() abort
+    " Windows only for now
+    if has("win32")
+        if exists("b:netrw_curdir")
+            let path = substitute(b:netrw_curdir, "/", "\\", "g")
+        elseif expand("%:p") == ""
+            let path = expand("%:p:h")
+        else
+            let path = expand("%:p")
+        endif
+        silent exe '!start explorer.exe /select,' .. path
+    else
+        echomsg "Not yet implemented!"
+    endif
+endfunc
+
+nnoremap <silent> gof :call File_manager()<CR>
+
+
+
+
+
+
 "  }}}
+
+
+""+-- Light line color config ---------------- {{{
+""
+
+let g:lightline = {
+      \ 'colorscheme': 'wombat',
+      \ }
+
+set noshowmode
+set laststatus=2
+
+
+
+" if !has('gui_running')
+"   set t_Co=256
+" endif
+
+
+
+
+
+""}}}
+
+
+" Colors -------------------------------------------------{{{
+
+
+":colorscheme molokai
+":colorscheme shades_of_purple
+ :colorscheme dracula
+
+
+
+
+"}}}
+
+
+
+
+" NerdTree logic and commands ---------------------------{{{
+"autocmd VimEnter * NERDTree
+" autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
+
+noremap <C-N> :NERDTreeToggle<CR>
+
+" Setting another directory as the starting point
+cd D:\
+
+"nnoremap <C-n> :NERDTreeMirror<CR>:NERDTreeFocus<CR>
+
+
+
+
+
+"autocmd FileChangedShellPost,SourcePre,SourceCmd,FocusGained,FocusLost,WinEnter,BufEnter,BufDelete,SessionLoadPost,FileChangedShellPost,GUIEnter * call lightline#update()
